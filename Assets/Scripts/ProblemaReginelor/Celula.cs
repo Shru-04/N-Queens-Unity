@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
-public class Celula : MonoBehaviour {
+public class Celula : MonoBehaviour
+{
 
 
 }

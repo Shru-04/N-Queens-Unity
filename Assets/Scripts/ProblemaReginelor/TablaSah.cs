@@ -1,9 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TablaSah : MonoBehaviour {
+public class TablaSah : MonoBehaviour
+{
 
 	public GameObject celula;
 	public GameObject[] regina;
@@ -19,23 +21,25 @@ public class TablaSah : MonoBehaviour {
 	public Celula[] celule;
 
 	// Use this for initialization
-	void Start () {
+	void Start()
+	{
 		n = PlayerPrefs.GetInt("Regine");
 		buton.SetActive(false);
-		
+
 		restart.SetActive(false);
-		if(n <= 6){
+		if (n <= 8)
+		{
 			loading.SetActive(true);
 			StartCoroutine(GenereazaTabla(x, y));
 		}
 		else
 		{
 			loading.SetActive(false);
-			matrice.text = "Nu se pot plasa mai mult de 6 regine!";
+			matrice.text = "No more than 8 queens can be placed";
 		}
 	}
-	
-//GENERAREA TABLEI DE SAH SI CREAREA OBIECTELOR DE TIP CELULA PENTRU COLORARE
+
+	//GENERAREA TABLEI DE SAH SI CREAREA OBIECTELOR DE TIP CELULA PENTRU COLORARE
 	IEnumerator GenereazaTabla(float x, float y)
 	{
 		GameObject go = new GameObject();
@@ -52,51 +56,51 @@ public class TablaSah : MonoBehaviour {
 				yield return new WaitForSeconds(.1f);
 				go = Instantiate(celula, pozitie, Quaternion.identity);
 				go.transform.SetParent(transform);
-				
+
 			}
-			
+
 		}
-		
+
 		yield return new WaitForSeconds(1);
 
 		GameObject[] vector = GameObject.FindGameObjectsWithTag("celula");
 		celule = new Celula[vector.Length];
 
-		for (int i = 0; i < vector.Length; i++) 
+		for (int i = 0; i < vector.Length; i++)
 		{
-    		celule[i] = vector[i].GetComponent<Celula>();
- 		}
+			celule[i] = vector[i].GetComponent<Celula>();
+		}
 		//coloreaza
 
 
-				
+
 		int[] X;
-        int[,] V;
-        int nr = celule.Length;    
-		
+		int[,] V;
+		int nr = celule.Length;
+
 		X = new int[nr];
-        V = new int[nr,nr];
+		V = new int[nr, nr];
 
 		for (int i = 0; i < nr; i++)
+		{
+			for (int j = 0; j < nr; j++)
 			{
-				for (int j = 0; j < nr ; j++)
-            	{
-				if(celule[j].GetComponent<Celula>().transform.GetChild(0).position == celule[i].GetComponent<Celula>().transform.GetChild(1).position || celule[j].GetComponent<Celula>().transform.GetChild(2).position == celule[i].GetComponent<Celula>().transform.GetChild(3).position || celule[i].GetComponent<Celula>().transform.GetChild(0).position == celule[j].GetComponent<Celula>().transform.GetChild(1).position || celule[i].GetComponent<Celula>().transform.GetChild(2).position == celule[j].GetComponent<Celula>().transform.GetChild(3).position)
-					V[i,j] = 1;
+				if (celule[j].GetComponent<Celula>().transform.GetChild(0).position == celule[i].GetComponent<Celula>().transform.GetChild(1).position || celule[j].GetComponent<Celula>().transform.GetChild(2).position == celule[i].GetComponent<Celula>().transform.GetChild(3).position || celule[i].GetComponent<Celula>().transform.GetChild(0).position == celule[j].GetComponent<Celula>().transform.GetChild(1).position || celule[i].GetComponent<Celula>().transform.GetChild(2).position == celule[j].GetComponent<Celula>().transform.GetChild(3).position)
+					V[i, j] = 1;
 				else
-					V[i,j] = 0;
-            	}
-
+					V[i, j] = 0;
 			}
+
+		}
 		Tabla(X, 0, V);
-		
+
 		buton.SetActive(true);
 		loading.SetActive(false);
-		
+
 	}
 
-//BACKTRACKING PENTRU COLORAREA TABLEI DE SAH
-#region coloreaza
+	//BACKTRACKING FOR COLORING THE CHESS BOARD
+	#region coloreaza
 	void RetSol(int[] x)
 	{
 		for (int i = 0; i < x.Length; i++)
@@ -109,7 +113,7 @@ public class TablaSah : MonoBehaviour {
 	{
 		for (int i = 0; i < K; i++)
 		{
-			if(v[K,i] == 1 && X[K] == X[i])
+			if (v[K, i] == 1 && X[K] == X[i])
 				return false;
 		}
 		return true;
@@ -117,70 +121,99 @@ public class TablaSah : MonoBehaviour {
 
 	void Tabla(int[] X, int K, int[,] V)
 	{
-		if(K == X.Length)
+		if (K == X.Length)
 			RetSol(X);
 		else
 		{
 			for (int i = 0; i < culori.Length; i++)
 			{
 				X[K] = i;
-				if(Cont(X, K, V))
+				if (Cont(X, K, V))
 					Tabla(X, K + 1, V);
 			}
 		}
 	}
-#endregion
+	#endregion
 
 
-//BACKTRACKING PENTRU PLASAREA REGINELOR 1-6
-#region Regine
+	//BACKTRACKING PENTRU PLASAREA REGINELOR 1-6
+	#region Regine
+
+
+	IEnumerator DisplaySoln()
+	{
+		GameObject[] vector = GameObject.FindGameObjectsWithTag("regina");
+		for (int i = 0; i < 1000; i++)
+		{
+			foreach (GameObject go in vector)
+			{
+				if (go.name == ("Hello_" + (i % contor + 1)))
+				{
+					//go.GetComponent<Animator>().SetBool("Blink", true);
+					go.SetActive(true);
+				}
+				else
+					go.SetActive(false);
+			}
+			yield return new WaitForSeconds(2);
+		}
+	}
+
 	void Plaseaza(int[] X, int n)
-    {
-			
+	{
+
 		contor++;
-		matrice.text = "Nr solutii: " + contor;
-			
-		//SE CREAZA O MATRICE DIN COORDONATELE OBIECTELOR (AXA X SI AXA Z)
-		//PLASAREA SE VA FACE IN FUNCTIE DE ACESTE COORDONATE
+		matrice.text = "No. of Solutions = " + contor;
+		String s = "";
+
+		//A MATRIX IS CREATED FROM THE COORDINATES OF THE OBJECTS (X AXIS AND Z AXIS)
+		//THE PLACEMENT WILL BE DONE ACCORDING TO THESE COORDINATES
 		Vector3 pozitie = new Vector3(x, 0, y);
-        for (int i = 0; i < n; i++)
-        {
+		for (int i = 0; i < n; i++)
+		{
 			pozitie.x = i;
-            for (int j = 0; j < n; j++)
-            {
+			for (int j = 0; j < n; j++)
+			{
 				pozitie.z = j;
 				pozitie.y = .1f;
-				GameObject reg = (j == X[i] ? Instantiate(regina[contor - 1], pozitie, Quaternion.identity) : null);	
+				s += (j == X[i]) ? "X " : "_ ";
+				GameObject reg = (j == X[i]) ? Instantiate(regina[(int)(contor - 1) % (int)10], pozitie, Quaternion.identity) : null;
+				if (reg != null)
+					reg.name = "Hello_" + contor;
 
 			}
+			s += "\n";
 
-			//if(contor % 5 == 0)
-			//	Restart();
-		}	
+		}
+		Debug.Log(s);
+		return;
 	}
 	public bool Continua(int[] X, int n, int k)
-	{		
+	{
 		for (int i = 0; i < k; i++)
 		{
-			if(X[k] == X[i] || Mathf.Abs(X[k] - X[i]) == k - i)
+			if (X[k] == X[i] || Mathf.Abs(X[k] - X[i]) == k - i)
 			{
 				return false;
 			}
 		}
-		
+
 		return true;
 	}
 
 	public void Regine(int[] X, int n, int k)
 	{
-		if(k==n)
-		Plaseaza(X, n);
+		if (k == n)
+		{
+			Plaseaza(X, n);     //Display Part
+			return;
+		}
 		else
 		{
 			for (int i = 0; i < n; i++)
 			{
 				X[k] = i;
-				if(Continua(X, n, k))
+				if (Continua(X, n, k))
 				{
 					Regine(X, n, k + 1);
 				}
@@ -190,25 +223,23 @@ public class TablaSah : MonoBehaviour {
 
 	public void Buton_Plaseaza()
 	{
-		if(n <= 6)
+		if (n <= 8)
 		{
 			int[] x = new int[n];
-	   		Regine(x, n, 0);
+			Regine(x, n, 0);            // Logic Part
 			buton.SetActive(false);
 			restart.SetActive(true);
-
-			GameObject[] vector = GameObject.FindGameObjectsWithTag("regina");
-			if(contor > 4)
-			{
-				foreach (GameObject go in vector)
-				{
-					go.GetComponent<Animator>().SetBool("Blink", true);
-				}
+			if (n == 2 || n == 3)
+            {
+				matrice.text = "Sorry, No Solutions :( ";
+				return;
 			}
-			
+			GameObject[] vector = GameObject.FindGameObjectsWithTag("regina");
+			for (int i = 0; i < 1000; i++)
+				StartCoroutine(DisplaySoln());
 		}
 		else
-			matrice.text = "Nu se pot plasa mai mult de 6 regine!";
+			matrice.text = "Cannot place more than 8 queens";
 	}
 
 	public void Restart()
@@ -220,5 +251,5 @@ public class TablaSah : MonoBehaviour {
 	{
 		UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex - 1);
 	}
-#endregion
+	#endregion
 }
